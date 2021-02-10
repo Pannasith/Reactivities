@@ -21,12 +21,27 @@ class ActivityStore {
   target = "";
 
   get activitiesByDate() {
-    return Array.from(this.activityRegistry.values()).sort(
-      (a, b) => Date.parse(a.date) - Date.parse(b.date)
+    return this.groupActivitiesByDate(
+      Array.from(this.activityRegistry.values())
     );
+    // return Array.from(this.activityRegistry.values()).sort(
+    //   (a, b) => Date.parse(a.date) - Date.parse(b.date)
+    // );
     // return this.activities
     //   .slice()
     //   .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+  }
+
+  private groupActivitiesByDate(activities: IActivity[]) {
+    const sortedActivities = activities.sort(
+      (a, b) => Date.parse(a.date) - Date.parse(b.date)
+    );
+
+    return Object.entries(sortedActivities.reduce((activities, activity) => {
+      const date = activity.date.split('T')[0];
+      activities[date] = activities[date] ? [...activities[date], activity] : [activity];
+      return activities;
+    }, {} as {[key: string]: IActivity[]}));
   }
 
   constructor() {
@@ -45,6 +60,7 @@ class ActivityStore {
         });
         this.loadingInitial = false;
       });
+      console.log(this.groupActivitiesByDate(activities));
     } catch (error) {
       runInAction(() => {
         this.loadingInitial = false;
@@ -64,23 +80,23 @@ class ActivityStore {
         runInAction(() => {
           this.activity = activity;
           this.loadingInitial = false;
-        })
+        });
       } catch (error) {
         runInAction(() => {
           this.loadingInitial = false;
-        })
-        console.log(error)
+        });
+        console.log(error);
       }
     }
   };
 
   clearActivity = () => {
     this.activity = null;
-  }
+  };
 
   private getActivity = (id: string) => {
     return this.activityRegistry.get(id);
-  }
+  };
 
   createActivity = async (activity: IActivity) => {
     this.submitting = true;
